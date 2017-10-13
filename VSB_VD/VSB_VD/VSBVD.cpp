@@ -31,8 +31,6 @@ void DrawSample(cv::Mat& mat, cv::Mat& points, cv::Mat& values)
 		float y = points.at<float>(i, 1) * scaleY + mat.rows / 2;
 		float v = values.at<float>(i);
 		cv::circle(mat, cv::Point(x, y), 3, cv::Scalar(1, 0, v), -1);
-
-		printf("%f \n", v);
 	}
 }
 
@@ -81,7 +79,7 @@ void ScatteredPointInterpolation() {
 
 	cv::Mat reconstruction = cv::Mat(400, 400, CV_32FC3);
 	cv::Mat rec_nearest = cv::Mat(400, 400, CV_32FC3);
-	double radius = 5;
+	double radius = 0.5;
 
 	double scaleX = reconstruction.cols / 6.0;
 	double scaleY = reconstruction.rows / 6.0;
@@ -117,9 +115,8 @@ void ScatteredPointInterpolation() {
 
 	cv::imshow("reconst nearest", rec_nearest);
 	cv::imshow("reconstruction", reconstruction);
-	cv::waitKey(30);
 
-	getchar();
+	cv::waitKey();
 }
 
 int main()
