@@ -14,5 +14,6 @@
 #include "utils.h"
 
 #include "ScatteredPointInterpolation.h"
+#include "Flow.h"
 
 // TODO: reference additional headers your program requires here
