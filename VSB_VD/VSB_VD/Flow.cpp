@@ -64,8 +64,8 @@ void Flow::curl(cv::Mat& input, cv::Mat& output, cv::Mat& outputColor)
 
 	cv::Mat outputNorm = cv::Mat(output.rows, output.cols, CV_32FC1);
 
+	cv::normalize(output, outputNorm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 	outputNorm.convertTo(outputNorm, CV_8UC1);
-	//cv::normalize(output, outputNorm, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 	//cv::normalize(output, outputNorm, 0, 1, cv::NORM_MINMAX, CV_32FC1);
 	applyColorMap(outputNorm, outputColor, cv::COLORMAP_COOL);
 
