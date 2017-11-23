@@ -370,7 +370,7 @@ void Volume::Raycast( Camera & camera, const int samples )
 
 					float t = 0;
 					CellIndices indices;
-					value = find_iso(ray, traversed_cells[tid], t, indices, 0.5f);
+					value = find_iso(ray, traversed_cells[tid], t, indices, 0.7f);
 
 					if (value < 0) {
 						continue;
