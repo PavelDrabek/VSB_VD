@@ -10,14 +10,10 @@ Flow::Flow(int W, int H)
 	float scaleY = H / (float)flowH;
 	scale = cv::Vec2f(scaleX, scaleY);
 
-	lines = cv::Mat(H, W, CV_32FC3);
 	matCurl = cv::Mat(flowH, flowW, CV_32F);
 	//matCurlColorized = cv::Mat(flowH, flowW, CV_32FC3);
 
-	for (size_t i = 0; i < 20; i++)
-	{
-		points.push_back(cv::Vec2f((i + 5) * (flowW / 28), flowH * 0.8));
-	}
+	resetPoints();
 
 	cv::namedWindow("flow");
 	cv::setMouseCallback("flow", CallBackFunc, this);
@@ -25,6 +21,17 @@ Flow::Flow(int W, int H)
 
 Flow::~Flow()
 {
+}
+
+
+void Flow::resetPoints() 
+{
+	points.clear();
+	for (size_t i = 0; i < 20; i++)
+	{
+		points.push_back(cv::Vec2f((i + 5) * (flowW / 28), flowH * 0.8));
+	}
+	lines = cv::Mat(H, W, CV_32FC3);
 }
 
 void Flow::execute()
@@ -59,13 +66,14 @@ void Flow::execute()
 		}
 		else if (k == 'r') {
 			i = 0;
+			resetPoints();
 		}
 		else if (k == 'd') {
-			dt += 0.05;
+			dt *= 1.1;
 			std::cout << "dt " << dt << std::endl;
 		}
 		else if (k == 'a') {
-			dt -= 0.05;
+			dt /= 1.1;
 			std::cout << "dt " << dt << std::endl;
 		}
 		else if (k == 'w') {

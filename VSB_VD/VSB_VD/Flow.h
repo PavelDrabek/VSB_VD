@@ -12,6 +12,8 @@ public:
 	cv::Mat matCurlColorized;
 	int W, H;
 
+	void resetPoints();
+
 	void execute();
 	void curl(cv::Mat & input, cv::Mat & output, cv::Mat & outputColor);
 	cv::Vec2f RungeKutta(cv::Mat & flow, cv::Vec2f & p, float dt);
