@@ -32,6 +32,7 @@ public:
 private:
 	std::vector<cv::Vec2f> points;
 	cv::Point2f scale;
-
+	float dt = 0.02;
+	int precision = 50;
 };
 

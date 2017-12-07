@@ -31,24 +31,56 @@ void Flow::execute()
 {
 	std::vector<cv::Mat> flows;
 	const int FLOWS_SIZE = 200;
+	size_t i = 0;
 
-	for (size_t i = 0; i < FLOWS_SIZE; i++)
+	cv::Mat loadedMat;
+	for (;;)
 	{
-		char fileName[100];
-		snprintf(fileName, sizeof(fileName), "flow/u%05d.yml", i);
-		cv::FileStorage storage(fileName, cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
-		cv::Mat loadedMat;
-		storage["flow"] >> loadedMat;
-
+		if (i < FLOWS_SIZE) {
+			char fileName[100];
+			snprintf(fileName, sizeof(fileName), "flow/u%05d.yml", i);
+			cv::FileStorage storage(fileName, cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
+			storage["flow"] >> loadedMat;
+			storage.release();
+			i++;
+		}
 		showFlowMat(loadedMat);
 
-		flows.push_back(loadedMat);
-		storage.release();
+		//flows.push_back(loadedMat);
+
+		int k = cv::waitKey(30);
+		if (k == ' ') {
+			std::cout << "paused " << std::endl;
+			cv::waitKey(0);
+			std::cout << "unpaused " << std::endl;
+		}
+		else if (k == 'q') {
+			exit(0);
+		}
+		else if (k == 'r') {
+			i = 0;
+		}
+		else if (k == 'd') {
+			dt += 0.05;
+			std::cout << "dt " << dt << std::endl;
+		}
+		else if (k == 'a') {
+			dt -= 0.05;
+			std::cout << "dt " << dt << std::endl;
+		}
+		else if (k == 'w') {
+			precision += 5;
+			std::cout << "precision " << precision << std::endl;
+		}
+		else if (k == 's') {
+			precision -= 5;
+			std::cout << "precision " << precision << std::endl;
+		}
 	}
 
 	for (;;)
 	{
-		showFlowMat(flows[flows.size() - 1]);
+		//showFlowMat(flows[flows.size() - 1]);
 	}
 
 	cv::waitKey();
@@ -152,9 +184,9 @@ void Flow::showFlowMat(cv::Mat & mat)
 		}
 	}
 
-	for (size_t i = 0; i < 50; i++)
+	for (size_t i = 0; i < precision; i++)
 	{
-		auto points2 = movePoints(mat, points, 0.02f);
+		auto points2 = movePoints(mat, points, dt);
 
 		for (size_t i = 0; i < points.size(); i++)
 		{
@@ -175,12 +207,4 @@ void Flow::showFlowMat(cv::Mat & mat)
 	cv::add(matFlow, lines, matFlow);
 
 	cv::imshow("flow", matFlow);
-	int k = cv::waitKey(30);
-
-	if (k == ' ') {
-		cv::waitKey(0);
-	}
-	else if (k == 'q') {
-		exit(0);
-	}
 }
