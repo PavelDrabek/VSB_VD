@@ -5,7 +5,7 @@
 
 #include <opencv2\opencv.hpp>
 
-cv::Mat LoadData() 
+cv::Mat LoadData()
 {
 	// f = 570.342
 
@@ -29,17 +29,30 @@ cv::Mat LoadSynthData()
 	return loadedMat;
 }
 
-inline bool isInside(cv::Mat& mat, int x, int y) 
+cv::Mat LoadSynthNormals()
+{
+	cv::FileStorage storage("data_synthetic/scene_eda_2.yml", cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
+	cv::Mat loadedMat;
+	storage["normals"] >> loadedMat;
+
+	return loadedMat;
+}
+
+inline bool isInside(cv::Mat& mat, int x, int y)
 {
 	return (x >= 0 && y >= 0 && x < mat.cols && y < mat.rows);
 }
 
-inline cv::Vec3f depthToMeters(int x, int y, int w, int h, float D, float f_pk) 
+inline cv::Vec3f depthToMeters(int x, int y, int w, int h, float D, float f_pk)
 {
-	return cv::Vec3f((x - w / 2) * D / f_pk, (-y + h / 2) * D / f_pk, D);
+	return cv::Vec3f(
+		(x - w / 2) * D / f_pk, 
+		(-y + h / 2) * D / f_pk,
+		D
+	);
 }
 
-std::vector<cv::Point> createOffsets(int rx, int ry) 
+std::vector<cv::Point> createOffsets(int rx, int ry)
 {
 	std::vector<cv::Point> offsets;
 	for (int x = -rx; x <= rx; x++) {
@@ -50,7 +63,7 @@ std::vector<cv::Point> createOffsets(int rx, int ry)
 	return offsets;
 }
 
-void depthToMeters(cv::Mat& depth, cv::Mat& output, float f_pk) 
+void depthToMeters(cv::Mat& depth, cv::Mat& output, float f_pk)
 {
 	int w = depth.cols;
 	int h = depth.rows;
@@ -77,8 +90,12 @@ std::vector<cv::Vec3f> getNbrValues(cv::Mat& meters, int x, int y, std::vector<c
 		if (!isInside(meters, _x, _y)) {
 			continue;
 		}
-	
-		values.push_back(meters.at<cv::Vec3f>(y, x));
+
+		auto v = meters.at<cv::Vec3f>(_y, _x);
+
+		if (v[2] > 0) {
+			values.push_back(v);
+		}
 	}
 
 	return values;
@@ -87,15 +104,11 @@ std::vector<cv::Vec3f> getNbrValues(cv::Mat& meters, int x, int y, std::vector<c
 cv::Vec3f getAvg(std::vector<cv::Vec3f>& values)
 {
 	cv::Vec3f sum = 0;
-	for (size_t i = 0; i < values.size(); i++)
-	{
-		//if (values[i][0] <= 0 && values[i][1] <= 0 && values[i][2] <= 0) {
-		//	continue;
-		//}
+	for (size_t i = 0; i < values.size(); i++) {
 		sum += values[i];
 	}
 
-	return sum * (1.0f / values.size());
+	return sum / (int)values.size();
 }
 
 cv::Vec3f getAvg(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
@@ -123,11 +136,10 @@ cv::Vec3f getAvg(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
 	return sum * (1.0f / count);
 }
 
-cv::Mat getEpsilon(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr) 
+cv::Mat getEpsilon(cv::Mat& meters, int x, int y, std::vector<cv::Vec3f>& nbrValues) 
 {
-	auto nbrValues = getNbrValues(meters, x, y, nbr);
 	cv::Vec3f avg = getAvg(nbrValues);
-	cv::Mat epsilon(3, 3, CV_32FC1);
+	cv::Mat epsilon = cv::Mat::zeros(3, 3, CV_32FC1);
 
 	for (size_t i = 0; i < nbrValues.size(); i++)
 	{
@@ -148,7 +160,7 @@ cv::Mat getEpsilon(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
 	if (y == 200)
 	{
 		//std::cout << nbrValues.size() << std::endl;
-		std::cout << epsilon << std::endl;
+		//std::cout << epsilon << std::endl;
 	}
 
 	return epsilon;
@@ -156,12 +168,24 @@ cv::Mat getEpsilon(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
 
 cv::Vec3f calcNormal(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
 {
-	cv::Mat epsilon = getEpsilon(meters, x, y, nbr);
+	auto nbrValues = getNbrValues(meters, x, y, nbr);
+	if (nbrValues.size() < 3) {
+		return cv::Vec3f(0,0,0);
+	}
+
+	cv::Mat epsilon = getEpsilon(meters, x, y, nbrValues);
 
 	cv::Mat values, vectors;
 	cv::eigen(epsilon, values, vectors);
 
-	return vectors.row(2);
+	cv::Vec3f n = vectors.row(2);
+	n = cv::normalize(n);
+
+	if (n.dot(cv::Vec3f(0, 0, 1)) < 0) {
+		n = -n;
+	}
+
+	return n;
 }
 
 cv::Mat calcNormals(cv::Mat& meters) {
@@ -183,8 +207,11 @@ void x(cv::Mat depth)
 	depthToMeters(depth, meters, 570.342f);
 	cv::Mat normals = calcNormals(meters);
 
+	cv::Mat normalsSynth = LoadSynthNormals();
+
 	cv::imshow("normals", normals);
-	cv::imshow("meters", meters * 0.001f);
+	cv::imshow("normalsSynth", normalsSynth);
+	//cv::imshow("meters", meters * 0.001f);
 	cv::waitKey(0);
 }
 
