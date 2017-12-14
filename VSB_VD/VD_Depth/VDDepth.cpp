@@ -11,11 +11,13 @@ cv::Mat LoadData()
 
 	//char fileName[100];
 	//snprintf(fileName, sizeof(fileName), "flow/u%05d.yml", 0);
-	cv::FileStorage storage("data/depth_2017-11-23T08-50-32F000000.yml", cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
+	cv::FileStorage storage("data/000.gz", cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
 	cv::Mat loadedMat;
 	storage["depth"] >> loadedMat;
 
-	loadedMat *= 5;
+	loadedMat.convertTo(loadedMat, CV_32FC1);
+
+	//loadedMat *= 5;
 	return loadedMat;
 }
 
@@ -24,6 +26,7 @@ cv::Mat LoadSynthData()
 	cv::FileStorage storage("data_synthetic/scene_eda_2.yml", cv::FileStorage::Mode::FORMAT_AUTO | cv::FileStorage::Mode::READ);
 	cv::Mat loadedMat;
 	storage["depth"] >> loadedMat;
+	loadedMat.convertTo(loadedMat, CV_32FC1);
 
 	//loadedMat *= .001;
 	return loadedMat;
@@ -46,10 +49,16 @@ inline bool isInside(cv::Mat& mat, int x, int y)
 inline cv::Vec3f depthToMeters(int x, int y, int w, int h, float D, float f_pk)
 {
 	return cv::Vec3f(
-		(x - w / 2) * D / f_pk, 
-		(-y + h / 2) * D / f_pk,
+		(x - w / 2) * D / f_pk,
+		-(-y + h / 2) * D / f_pk,
 		D
 	);
+
+	//return cv::Vec3f(
+	//	(x - w / 2) * (f_pk), 
+	//	(-y + h / 2) * (f_pk),
+	//	D
+	//);
 }
 
 std::vector<cv::Point> createOffsets(int rx, int ry)
@@ -68,12 +77,17 @@ void depthToMeters(cv::Mat& depth, cv::Mat& output, float f_pk)
 	int w = depth.cols;
 	int h = depth.rows;
 
-	for (size_t x = 0; x < w; x++)
+	for (size_t y = 0; y < h; y++)
 	{
-		for (size_t y = 0; y < h; y++)
+		for (size_t x = 0; x < w; x++)
 		{
 			float D = depth.at<float>(y, x);
-			output.at<cv::Vec3f>(y, x) = depthToMeters(x, y, w, h, D, f_pk);
+			if (D <= 0) {
+				output.at<cv::Vec3f>(y, x) = cv::Vec3f(0,0,0);
+			} else {
+				cv::Vec3f v = depthToMeters(x, y, w, h, D, f_pk);
+				output.at<cv::Vec3f>(y, x) = v;
+			}
 		}
 	}
 }
@@ -190,7 +204,7 @@ cv::Vec3f calcNormal(cv::Mat& meters, int x, int y, std::vector<cv::Point>& nbr)
 
 cv::Mat calcNormals(cv::Mat& meters) {
 	cv::Mat normals = cv::Mat(meters.rows, meters.cols, CV_32FC3);
-	std::vector<cv::Point> offsets = createOffsets(1, 1);
+	std::vector<cv::Point> offsets = createOffsets(2, 2);
 
 	for (size_t x = 0; x < meters.cols; x++) {
 		for (size_t y = 0; y < meters.rows; y++) {
@@ -209,6 +223,8 @@ void x(cv::Mat depth)
 
 	cv::Mat normalsSynth = LoadSynthNormals();
 
+	//cv::imshow("depth", depth * 10);
+	//cv::imshow("meters", meters * 100000);
 	cv::imshow("normals", normals);
 	cv::imshow("normalsSynth", normalsSynth);
 	//cv::imshow("meters", meters * 0.001f);
@@ -217,7 +233,8 @@ void x(cv::Mat depth)
 
 int main()
 {
-	cv::Mat data = LoadSynthData();
+	cv::Mat data = LoadData();
+	//cv::Mat data = LoadSynthData();
 
 	x(data);
 

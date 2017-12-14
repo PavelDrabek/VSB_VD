@@ -53,6 +53,16 @@ def print2fc(lst):
 def print2f(lst):    
   print([float("{0:.2f}".format(x)) for x in lst])
 
+def get2fl(lst):
+  return lst
+
+def get2fc(lst):  
+  return ["{0:.2f}{1}{2:.2f}j".format(x.real, "+" if x.imag>=0 else "", x.imag) for x in lst]
+
+def get2f(lst):    
+  return [float("{0:.2f}".format(x)) for x in lst]
+
+
 N = 10
 samples = column(x, 3)[:3650]
 # samples = [math.sin(2*math.pi*x/N) for x in range(N)] # sampled data
@@ -71,7 +81,22 @@ rsamples = [f(n, fsamples) for n in range(N)] # reconstructed samples
 print("\nReconstructed samples back in spatial domain")
 print2fc(rsamples)
 print("\nPower spectrum")
-print2fl(p(fsamples))
+power = get2fl(p(fsamples))
+print(power)
+
+# f = open('output.csv', 'w')
+# f.write(repr(power))
+# f.close()
+
+### export to CSV
+import csv
+
+with open('output.csv', 'w') as csvfile:
+    fieldnames = ['Hz', 'power']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+    for x in power:
+      writer.writerow({'Hz': repr(x[0]), 'power': repr(x[1])})
 
 """
 y = [basis(1, x) for x in D]
