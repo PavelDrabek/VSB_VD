@@ -64,7 +64,7 @@ void ScatteredPointInterpolation::Execute()
 
 	cv::Mat reconstruction = cv::Mat(400, 400, CV_32FC3);
 	cv::Mat rec_nearest = cv::Mat(400, 400, CV_32FC3);
-	double radius = 0.5;
+	double radius = 0.4;
 
 	double scaleX = reconstruction.cols / 6.0;
 	double scaleY = reconstruction.rows / 6.0;
@@ -85,7 +85,7 @@ void ScatteredPointInterpolation::Execute()
 			float sv = 0; // sum of values
 			for (int i = 0; i < no_indices; ++i)
 			{
-				float d = dists.at<float>(i);
+				float d = dists.at<float>(0);
 				float w = SQR(MAX(0, radius - d) / (radius * d));
 				float v = sample_values.at<float>(indices.at<int>(i));
 				sv += v * w;

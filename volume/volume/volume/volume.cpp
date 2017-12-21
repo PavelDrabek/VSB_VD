@@ -370,7 +370,7 @@ void Volume::Raycast( Camera & camera, const int samples )
 
 					float t = 0;
 					CellIndices indices;
-					value = find_iso(ray, traversed_cells[tid], t, indices, 0.7f);
+					value = find_iso(ray, traversed_cells[tid], t, indices, 0.2f);
 
 					if (value < 0) {
 						continue;
@@ -383,7 +383,7 @@ void Volume::Raycast( Camera & camera, const int samples )
 					Vector3 L = lightPos - ray.eval(t); // dir to light
 					L.Normalize();
 
-					Vector3 matColor = Vector3(1, 1, 1) * value;
+					Vector3 matColor = Vector3(1, 1, 1);
 					color = lambert(L, n, matColor);
 				}
 			}

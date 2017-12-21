@@ -233,8 +233,8 @@ void x(cv::Mat depth)
 
 int main()
 {
-	cv::Mat data = LoadData();
-	//cv::Mat data = LoadSynthData();
+	//cv::Mat data = LoadData();
+	cv::Mat data = LoadSynthData();
 
 	x(data);
 

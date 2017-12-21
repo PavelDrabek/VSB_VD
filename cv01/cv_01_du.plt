@@ -1,7 +1,7 @@
 set terminal pdfcairo enhanced color font "sans,7" fontscale 1.0 linewidth 1 rounded dashlength 1 background "white" size 36cm,12cm 
 set encoding utf8
 
-set output "cv_01d.pdf"
+set output "cv_01_du.pdf"
 
 #definovani barvy os
 set style line 80 linetype 1 linecolor "#808080" linewidth 2 
